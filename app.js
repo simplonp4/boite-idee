@@ -28,12 +28,27 @@ const LISTE_IDEES = [
 
 // RECUPERATIONS DES ELEMENTS DOM
 const propositionElement = document.getElementById("propositions")
+const ideeForm = document.querySelector("form")
 
+// RECUPERATION DES INFORMAIONS DU FORMULAIRE
+
+ideeForm.addEventListener("submit", (event) => {
+  event.preventDefault()
+  const inputTitre = document.querySelector("input#titre")
+  const inputSuggestion = document.querySelector("textarea#suggestion")
+
+  // Récupération des informations saisies
+  const titreSaisi = inputTitre.value
+  const suggestionSaisi = inputSuggestion.value
+})
+
+// AFFICHAGE DE LA DES IDEES
 LISTE_IDEES.forEach((idee) => {
   const divCard = document.createElement("div")
   divCard.classList.add("card")
   divCard.classList.add("m-2")
-  divCard.style.width = "18rem"
+  divCard.classList.add("col-3")
+  divCard.style.width = "22rem"
 
   const divCardBody = document.createElement("div")
   divCardBody.classList.add("card-body")
