@@ -11,6 +11,8 @@ const LISTE_IDEES = [
 // RECUPERATIONS DES ELEMENTS DOM
 const propositionElement = document.getElementById("propositions")
 const ideeForm = document.querySelector("form")
+const inputTitre = document.querySelector("input#titre")
+const inputSuggestion = document.querySelector("textarea#suggestion")
 
 // NOS FONCTIONS
 const creerUneCarte = (idee) => {
@@ -38,12 +40,36 @@ const creerUneCarte = (idee) => {
   propositionElement.appendChild(divCard)
 }
 
+// VERIFICATION DES MOTS SAISIS
+
+inputSuggestion.addEventListener("input", (event) => {
+  const longueurMax = 130
+  const contenuSaisi = inputSuggestion.value
+  const longueurSaisi = contenuSaisi.length
+  const reste = longueurMax - longueurSaisi
+
+  //actualiser le dom pour afficher le nombre
+  const paragraphCompteur = document.getElementById("limite-text")
+  const compteurText = document.getElementById("text-progress")
+  const restantText = document.getElementById("text-restant")
+  const btnSuggestion = document.getElementById("btn-suggestion")
+  compteurText.textContent = longueurSaisi
+  restantText.textContent = " Il vous reste " + reste
+
+  //changer couleur
+  if (reste <= 16) {
+    paragraphCompteur.style.color = "yellow"
+  }
+  if (reste < 0) {
+    paragraphCompteur.style.color = "#ce0033"
+    btnSuggestion.disabled = true
+  }
+})
+
 // RECUPERATION DES INFORMAIONS DU FORMULAIRE
 
 ideeForm.addEventListener("submit", (event) => {
   event.preventDefault()
-  const inputTitre = document.querySelector("input#titre")
-  const inputSuggestion = document.querySelector("textarea#suggestion")
 
   // Récupération des informations saisies
   const titreSaisi = inputTitre.value
