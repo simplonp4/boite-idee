@@ -8,6 +8,11 @@ const LISTE_IDEES = [
   },
 ]
 
+const API_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzOTUwNTA3NiwiZXhwIjoxOTU1MDgxMDc2fQ.nugD6bl641l6KFBgo9SgmnpWuNJDR0K9rfH6ZHVAHgo"
+
+const API_URL = "https://mjfhxhlnaztdifgwfnjj.supabase.co/rest/v1/idees"
+
 // RECUPERATIONS DES ELEMENTS DOM
 const propositionElement = document.getElementById("propositions")
 const ideeForm = document.querySelector("form")
@@ -18,6 +23,8 @@ const inputSuggestion = document.querySelector("textarea#suggestion")
 const creerUneCarte = (idee) => {
   const divCard = document.createElement("div")
   divCard.classList.add("card")
+  divCard.classList.add("animate__animated")
+  divCard.classList.add("animate__bounce")
   divCard.classList.add("m-2")
   divCard.classList.add("col-3")
   divCard.style.width = "22rem"
@@ -57,12 +64,16 @@ inputSuggestion.addEventListener("input", (event) => {
   restantText.textContent = " Il vous reste " + reste
 
   //changer couleur
-  if (reste <= 16) {
-    paragraphCompteur.style.color = "yellow"
-  }
+
   if (reste < 0) {
     paragraphCompteur.style.color = "#ce0033"
     btnSuggestion.disabled = true
+  } else if (reste <= 16) {
+    paragraphCompteur.style.color = "yellow"
+    btnSuggestion.disabled = false
+  } else {
+    paragraphCompteur.style.color = "#00000"
+    btnSuggestion.disabled = false
   }
 })
 
@@ -82,7 +93,6 @@ ideeForm.addEventListener("submit", (event) => {
 
   // mettre les informations sous forme
   const nouvelleIdee = {
-    id: 5,
     titre: titreSaisi,
     suggestion: suggestionSaisi,
     statut: false,
@@ -90,6 +100,16 @@ ideeForm.addEventListener("submit", (event) => {
 
   // Ajout de la nouvelle idée au niveau du tableau idées
   LISTE_IDEES.push(nouvelleIdee)
+
+  //ENVOYER LES DONNEES VERS SUPABASE
+  fetch(API_URL, {
+    method: "POST",
+    headers: {
+      apikey: API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(nouvelleIdee),
+  })
 
   // on vide les champs
   inputTitre.value = ""
