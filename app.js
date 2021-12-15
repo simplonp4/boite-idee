@@ -1,13 +1,3 @@
-// LES DONNEES DE NOTRE APPLICATIONS
-const LISTE_IDEES = [
-  {
-    id: 1,
-    titre: "cours",
-    suggestion: "juste une proposition pour les heures de cours",
-    statut: false,
-  },
-]
-
 const API_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzOTUwNTA3NiwiZXhwIjoxOTU1MDgxMDc2fQ.nugD6bl641l6KFBgo9SgmnpWuNJDR0K9rfH6ZHVAHgo"
 
@@ -98,9 +88,6 @@ ideeForm.addEventListener("submit", (event) => {
     statut: false,
   }
 
-  // Ajout de la nouvelle idée au niveau du tableau idées
-  LISTE_IDEES.push(nouvelleIdee)
-
   //ENVOYER LES DONNEES VERS SUPABASE
   fetch(API_URL, {
     method: "POST",
@@ -120,6 +107,19 @@ ideeForm.addEventListener("submit", (event) => {
 })
 
 // AFFICHAGE DE LA DES IDEES
-LISTE_IDEES.forEach((idee) => {
-  creerUneCarte(idee)
+
+window.addEventListener("DOMContentLoaded", (event) => {
+  //RECUPERATION DES DONNEES VIA API
+  fetch(API_URL, {
+    method: "GET",
+    headers: {
+      apikey: API_KEY,
+    },
+  })
+    .then((response) => response.json())
+    .then((idees) => {
+      idees.forEach((idee) => {
+        creerUneCarte(idee)
+      })
+    })
 })
