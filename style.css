@@ -9,3 +9,8 @@
 .btn:hover {
   transform: scale(1.1);
 }
+
+.invalid {
+  border-color: #ce0033;
+  opacity: 0.6;
+}

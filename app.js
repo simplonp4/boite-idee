@@ -10,6 +10,7 @@ const inputTitre = document.querySelector("input#titre")
 const inputSuggestion = document.querySelector("textarea#suggestion")
 
 // NOS FONCTIONS
+
 /**
  * Cette fonction permet de créer une carte et de l'inserrer dans le DOM
  * @param un idee
@@ -102,6 +103,8 @@ ideeForm.addEventListener("submit", (event) => {
   const suggestionSaisi = inputSuggestion.value
 
   if (titreSaisi.trim().length < 5 || suggestionSaisi.trim().length < 10) {
+    inputTitre.classList.add("invalid")
+    inputSuggestion.classList.add("invalid")
     alert("Merci de saisir des informations correctes")
     return
   }
@@ -119,16 +122,20 @@ ideeForm.addEventListener("submit", (event) => {
     headers: {
       apikey: API_KEY,
       "Content-Type": "application/json",
+      Prefer: "return=representation",
     },
     body: JSON.stringify(nouvelleIdee),
   })
+    .then((response) => response.json())
+    .then((data) => {
+      ideeCreeAuNiveauAPI = data[0]
+      //AJOUT DE LA NOUVELLE IDEE AU NIVEAU DE LA PAGE
+      creerUneCarte(ideeCreeAuNiveauAPI)
+    })
 
   // on vide les champs
   inputTitre.value = ""
   inputSuggestion.value = ""
-
-  //AJOUT DE LA NOUVELLE IDEE AU NIVEAU DE LA PAGE
-  creerUneCarte(nouvelleIdee)
 })
 
 // AFFICHAGE DE LA DES IDEES
