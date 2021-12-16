@@ -19,16 +19,17 @@ const creerUneCarte = (idee) => {
   //création de nos ids
   const idButtonValider = "btn_valider-" + idee.id
   const idButtonRefuser = "btn_refuser-" + idee.id
+  const idCardIdee = "numero_card-" + idee.id
 
   //Insertion de la carte au niveau du DOM
   propositionElement.insertAdjacentHTML(
     "beforeend",
     `
-  <div class="card card-idea m-2" style="width: 18rem">
+  <div class="card card-idea m-2" style="width: 18rem" id="${idCardIdee}">
       <div class="card-body flex-column d-flex justify-content-between">
           <div class="card-block-titre">
             <h5 class="card-title fw-bold">${idee.titre}</h5>
-            <h6 class="card-subtitle mb-2 text-muted">
+            <h6 class="card-subtitle mb-2 text-gris">
                 approuvée / réfusée
             </h6>
           </div>
@@ -57,11 +58,61 @@ const creerUneCarte = (idee) => {
 
   //Ecouter l'évenement click sur les boutons
   btnValider.addEventListener("click", (event) => {
-    alert("on veut valider")
+    //on prend l'id de l'idée
+    fetch(API_URL + "?id=eq." + idee.id, {
+      method: "PATCH",
+      headers: {
+        apikey: API_KEY,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({ statut: true }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data[0].statut === true) {
+          //On récupere la carde concernée
+          const divCard = document.getElementById(idCardIdee)
+          divCard.style.border = "1px solid #198754"
+          btnValider.style.visibility = "hidden"
+          btnRefuser.style.visibility = "visible"
+
+          //Chage le message au niveau du h6
+          const h6 = document.querySelector("#" + idCardIdee + " h6")
+          h6.textContent = "Approuvée"
+          h6.classList.remove("text-red")
+          h6.classList.add("text-green")
+        }
+      })
   })
 
   btnRefuser.addEventListener("click", (event) => {
-    alert("ont veut refuser")
+    //on prend l'id de l'idée
+    fetch(API_URL + "?id=eq." + idee.id, {
+      method: "PATCH",
+      headers: {
+        apikey: API_KEY,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({ statut: false }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data[0].statut === false) {
+          //On récupere la carde concernée
+          const divCard = document.getElementById(idCardIdee)
+          divCard.style.border = "1px solid #ce0033"
+          btnRefuser.style.visibility = "hidden"
+          btnValider.style.visibility = "visible"
+
+          //Chage le message au niveau du h6
+          const h6 = document.querySelector("#" + idCardIdee + " h6")
+          h6.textContent = "Refusée"
+          h6.classList.remove("text-green")
+          h6.classList.add("text-red")
+        }
+      })
   })
 }
 
