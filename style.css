@@ -1,0 +1,11 @@
+.card-idea:hover {
+  background: rgba(241, 235, 237, 0.1);
+  box-shadow: 0 4px 12px 0 rgba(106, 108, 143, 0.37);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.btn:hover {
+  transform: scale(1.1);
+}

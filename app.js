@@ -10,25 +10,38 @@ const inputTitre = document.querySelector("input#titre")
 const inputSuggestion = document.querySelector("textarea#suggestion")
 
 // NOS FONCTIONS
+/**
+ * Cette fonction permet de créer une carte et de l'inserrer dans le DOM
+ * @param un idee
+ */
 const creerUneCarte = (idee) => {
+  //création de nos ids
+  const idButtonValider = "btn_valider-" + idee.id
+  const idButtonRefuser = "btn_refuser-" + idee.id
+
+  //Insertion de la carte au niveau du DOM
   propositionElement.insertAdjacentHTML(
-    "afterbegin",
+    "beforeend",
     `
-  <div class="card me-1" style="width: 18rem">
-      <div class="card-body">
-          <h5 class="card-title fw-bold">${idee.titre}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">
-              approuvée / réfusée
-          </h6>
+  <div class="card card-idea m-2" style="width: 18rem">
+      <div class="card-body flex-column d-flex justify-content-between">
+          <div class="card-block-titre">
+            <h5 class="card-title fw-bold">${idee.titre}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+                approuvée / réfusée
+            </h6>
+          </div>
           <p class="card-text">${idee.suggestion}
           </p>
           <div class="d-flex justify-content-between">
               <i
-                  class="bi bi-check-circle text-success card-link"
+                  class="bi bi-check-circle text-success card-link btn"
+                  id="${idButtonValider}"
                   style="font-size: 2rem"
               ></i>
               <i
-                  class="bi bi-x-circle card-link"
+                  class="bi bi-x-circle card-link btn"
+                   id="${idButtonRefuser}"
                   style="font-size: 2rem; color: #ce0033"
               ></i>
           </div>
@@ -36,10 +49,22 @@ const creerUneCarte = (idee) => {
   </div>
   `
   )
+
+  //Ajout des évenements  sur les bouttons valider et refuser
+  const btnValider = document.getElementById(idButtonValider)
+  const btnRefuser = document.getElementById(idButtonRefuser)
+
+  //Ecouter l'évenement click sur les boutons
+  btnValider.addEventListener("click", (event) => {
+    alert("on veut valider")
+  })
+
+  btnRefuser.addEventListener("click", (event) => {
+    alert("ont veut refuser")
+  })
 }
 
 // VERIFICATION DES MOTS SAISIS
-
 inputSuggestion.addEventListener("input", (event) => {
   const longueurMax = 130
   const contenuSaisi = inputSuggestion.value
@@ -69,7 +94,6 @@ inputSuggestion.addEventListener("input", (event) => {
 })
 
 // RECUPERATION DES INFORMAIONS DU FORMULAIRE
-
 ideeForm.addEventListener("submit", (event) => {
   event.preventDefault()
 
@@ -108,7 +132,6 @@ ideeForm.addEventListener("submit", (event) => {
 })
 
 // AFFICHAGE DE LA DES IDEES
-
 window.addEventListener("DOMContentLoaded", (event) => {
   //RECUPERATION DES DONNEES VIA API
   fetch(API_URL, {
