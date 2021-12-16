@@ -111,7 +111,6 @@ ideeForm.addEventListener("submit", (event) => {
 window.addEventListener("DOMContentLoaded", (event) => {
   //RECUPERATION DES DONNEES VIA API
   fetch(API_URL, {
-    method: "GET",
     headers: {
       apikey: API_KEY,
     },
