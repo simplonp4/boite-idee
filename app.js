@@ -1,13 +1,14 @@
 const API_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzOTUwNTA3NiwiZXhwIjoxOTU1MDgxMDc2fQ.nugD6bl641l6KFBgo9SgmnpWuNJDR0K9rfH6ZHVAHgo"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjM4OTc5MDUxLCJleHAiOjE5NTQ1NTUwNTF9.9zUm7vEolQ-I2qKcxN3NIz2I-o2iAiSoAZzwdy8fO5g"
+const API_URL = "https://pomvfsgmnducyfclngvq.supabase.co/rest/v1/sugestions"
 
-const API_URL = "https://mjfhxhlnaztdifgwfnjj.supabase.co/rest/v1/idees"
 
 // RECUPERATIONS DES ELEMENTS DOM
 const propositionElement = document.getElementById("propositions")
 const ideeForm = document.querySelector("form")
 const inputTitre = document.querySelector("input#titre")
 const inputSuggestion = document.querySelector("textarea#suggestion")
+let metrique = {total:0, accepte:0, refuse:0}
 
 // NOS FONCTIONS
 
@@ -25,7 +26,7 @@ const creerUneCarte = (idee) => {
   propositionElement.insertAdjacentHTML(
     "beforeend",
     `
-  <div class="card card-idea m-2" style="width: 18rem" id="${idCardIdee}">
+  <div class="card card-idea m-2" style="width: 18rem" id="${idCardIdee}" data-state="${idee.statut}">
       <div class="card-body flex-column d-flex justify-content-between">
           <div class="card-block-titre">
             <h5 class="card-title fw-bold">${idee.titre}</h5>
@@ -56,6 +57,32 @@ const creerUneCarte = (idee) => {
   const btnValider = document.getElementById(idButtonValider)
   const btnRefuser = document.getElementById(idButtonRefuser)
 
+  if (idee.statut === true) {
+    //On récupere la carde concernée
+    const divCard = document.getElementById(idCardIdee)
+    divCard.style.border = "1px solid #198754"
+    btnValider.style.visibility = "hidden"
+    btnRefuser.style.visibility = "visible"
+
+    //Chage le message au niveau du h6
+    const h6 = document.querySelector("#" + idCardIdee + " h6")
+    h6.textContent = "Approuvée"
+    h6.classList.remove("text-red")
+    h6.classList.add("text-green")
+  }else{
+    const divCard = document.getElementById(idCardIdee)
+    divCard.style.border = "1px solid #ce0033"
+    btnRefuser.style.visibility = "hidden"
+    btnValider.style.visibility = "visible"
+
+    //Chage le message au niveau du h6
+    const h6 = document.querySelector("#" + idCardIdee + " h6")
+    h6.textContent = "Refusée"
+    h6.classList.remove("text-green")
+    h6.classList.add("text-red") 
+  }
+
+
   //Ecouter l'évenement click sur les boutons
   btnValider.addEventListener("click", (event) => {
     //on prend l'id de l'idée
@@ -82,6 +109,15 @@ const creerUneCarte = (idee) => {
           h6.textContent = "Approuvée"
           h6.classList.remove("text-red")
           h6.classList.add("text-green")
+          metrique.accepte++
+          metrique.refuse--
+          buildGoogleChart()
+          let pourcentageAccepte = (metrique.accepte*100)/metrique.total
+          let pourcentageRefuse = (metrique.refuse*100)/metrique.total
+          let cercle =  document.querySelector('.percentage')
+          cercle.style.background = `conic-gradient(#198754 ${pourcentageAccepte}%, #ce0033 0)`
+          document.querySelector('.pourcentage-accepte').innerHTML = `${pourcentageAccepte.toFixed(2)}%`
+          document.querySelector('.pourcentage-refuse').innerHTML = `${pourcentageRefuse.toFixed(2)}%`        
         }
       })
   })
@@ -111,9 +147,41 @@ const creerUneCarte = (idee) => {
           h6.textContent = "Refusée"
           h6.classList.remove("text-green")
           h6.classList.add("text-red")
+          metrique.accepte--
+          metrique.refuse++
+          buildGoogleChart()
+          let pourcentageAccepte = (metrique.accepte*100)/metrique.total
+          let pourcentageRefuse = (metrique.refuse*100)/metrique.total
+          let cercle =  document.querySelector('.percentage')
+          cercle.style.background = `conic-gradient(#198754 ${pourcentageAccepte}%, #ce0033 0)`
+          document.querySelector('.pourcentage-accepte').innerHTML = `${pourcentageAccepte.toFixed(2)}%`
+          document.querySelector('.pourcentage-refuse').innerHTML = `${pourcentageRefuse.toFixed(2)}%`        
         }
       })
   })
+
+
+  if (idee.statut){
+    metrique.accepte++
+  }else{
+    metrique.refuse++
+  }metrique.total++
+
+  let pourcentageAccepte = (metrique.accepte*100)/metrique.total
+  let pourcentageRefuse = (metrique.refuse*100)/metrique.total
+
+  let cercle =  document.querySelector('.percentage')
+  cercle.style.background = `conic-gradient(#198754 ${pourcentageAccepte}%, #ce0033 0)`
+  document.querySelector('.pourcentage-accepte').innerHTML = `${pourcentageAccepte.toFixed(2)}%`
+  document.querySelector('.pourcentage-refuse').innerHTML = `${pourcentageRefuse.toFixed(2)}%`
+
+  // mise à jour des data-set
+
+  let chartDiv = document.getElementById('chart_div')
+
+  chartDiv.setAttribute('data-accept', metrique.accepte)
+  chartDiv.setAttribute('data-refuse', metrique.refuse)
+
 }
 
 // VERIFICATION DES MOTS SAISIS
@@ -189,9 +257,7 @@ ideeForm.addEventListener("submit", (event) => {
   inputSuggestion.value = ""
 })
 
-// AFFICHAGE DE LA DES IDEES
-window.addEventListener("DOMContentLoaded", (event) => {
-  //RECUPERATION DES DONNEES VIA API
+function rendreLesCartes() {
   fetch(API_URL, {
     headers: {
       apikey: API_KEY,
@@ -199,8 +265,76 @@ window.addEventListener("DOMContentLoaded", (event) => {
   })
     .then((response) => response.json())
     .then((idees) => {
-      idees.forEach((idee) => {
-        creerUneCarte(idee)
-      })
+      idees.forEach((idee) => creerUneCarte(idee))
+
+      buildGoogleChart()
     })
+}
+rendreLesCartes();
+
+
+document.querySelector('.filtre-refuse').addEventListener('click', ()=>{
+  let cartes = propositionElement.children
+  for (const carte of cartes) {
+    if(carte.getAttribute('data-state') == "true"){
+      carte.classList.add('d-none')
+    }else{
+      carte.classList.remove('d-none')
+    }
+  }
 })
+document.querySelector('.filtre-accepte').addEventListener('click', ()=>{
+  let cartes = propositionElement.children
+  for (const carte of cartes) {
+    if(carte.getAttribute('data-state') == "false"){
+      carte.classList.add('d-none')
+    }else{
+      carte.classList.remove('d-none')
+    }
+  }
+})
+
+document.querySelector('.filtre-tous').addEventListener('click', ()=>{
+  let cartes = propositionElement.children
+  for (const carte of cartes) {
+    carte.classList.remove('d-none')
+  }
+})
+
+
+
+function buildGoogleChart() {
+  google.charts.load('current', {'packages':['corechart','bar']});
+  google.charts.setOnLoadCallback(drawChart);
+  
+  function drawChart() {
+          // let accept = document.getElementById('chart_div').dataset.accept
+          // let refuse = document.getElementById('chart_div').dataset.refuse
+          
+          // Create the data table.
+          var data = new google.visualization.DataTable();
+          data.addColumn('string', 'Topping');
+          data.addColumn('number', 'Slices');
+          // console.log(accept)
+          
+          data.addRows([
+              ['accepté', metrique.accepte],
+              ['refusé', metrique.refuse]
+          ]);
+          
+          // Set chart options
+          var options = {'title':'Stats des idées',
+          'colors':['#ce0033', '#198754'],
+          'width':400,
+          'height':250,
+          pieHole: 0.5,
+          pieSliceTextStyle: {
+              color: 'white',
+          },
+      };
+      
+      // Instantiate and draw our chart, passing in some options.
+      var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+  }
+}

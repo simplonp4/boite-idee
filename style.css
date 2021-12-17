@@ -30,3 +30,8 @@
   color: rgba(0, 0, 0, 0.6);
   font-style: italic;
 }
+
+.percentage{
+  height: 200px;
+  width: 200px;
+}
