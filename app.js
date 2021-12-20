@@ -1,7 +1,11 @@
+const  Database = require('./database.js')
+const template = require('./template.js')
+ 
 const API_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjM4OTc5MDUxLCJleHAiOjE5NTQ1NTUwNTF9.9zUm7vEolQ-I2qKcxN3NIz2I-o2iAiSoAZzwdy8fO5g"
-const API_URL = "https://pomvfsgmnducyfclngvq.supabase.co/rest/v1/sugestions"
+const API_URL = "https://pomvfsgmnducyfclngvq.supabase.co/rest/v1/sugests"
 
+const database = new Database(API_URL, API_KEY)
 
 // RECUPERATIONS DES ELEMENTS DOM
 const propositionElement = document.getElementById("propositions")
@@ -24,142 +28,77 @@ const creerUneCarte = (idee) => {
 
   //Insertion de la carte au niveau du DOM
   propositionElement.insertAdjacentHTML(
-    "beforeend",
-    `
-  <div class="card card-idea m-2" style="width: 18rem" id="${idCardIdee}" data-state="${idee.statut}">
-      <div class="card-body flex-column d-flex justify-content-between">
-          <div class="card-block-titre">
-            <h5 class="card-title fw-bold">${idee.titre}</h5>
-            <h6 class="card-subtitle mb-2 text-gris">
-                approuvée / réfusée
-            </h6>
-          </div>
-          <p class="card-text">${idee.suggestion}
-          </p>
-          <div class="d-flex justify-content-between">
-              <i
-                  class="bi bi-check-circle text-success card-link btn"
-                  id="${idButtonValider}"
-                  style="font-size: 2rem"
-              ></i>
-              <i
-                  class="bi bi-x-circle card-link btn"
-                   id="${idButtonRefuser}"
-                  style="font-size: 2rem; color: #ce0033"
-              ></i>
-          </div>
-      </div>
-  </div>
-  `
+    "beforeend", template(idee)
   )
 
   //Ajout des évenements  sur les bouttons valider et refuser
   const btnValider = document.getElementById(idButtonValider)
   const btnRefuser = document.getElementById(idButtonRefuser)
 
-  if (idee.statut === true) {
+  function changerStyleCarte(
+    coleurBordure, 
+    coleurTitre, 
+    titre, 
+    statusBtnValider, 
+    statusBtnRefuser,
+    classeAsupprimer
+    ) {
+      
     //On récupere la carde concernée
     const divCard = document.getElementById(idCardIdee)
-    divCard.style.border = "1px solid #198754"
-    btnValider.style.visibility = "hidden"
-    btnRefuser.style.visibility = "visible"
+    divCard.style.border = "1px solid "+coleurBordure;
+    btnValider.style.visibility = statusBtnValider
+    btnRefuser.style.visibility = statusBtnRefuser
 
     //Chage le message au niveau du h6
     const h6 = document.querySelector("#" + idCardIdee + " h6")
-    h6.textContent = "Approuvée"
-    h6.classList.remove("text-red")
-    h6.classList.add("text-green")
+    h6.textContent = titre
+    h6.classList.remove(classeAsupprimer)
+    h6.classList.add("text-"+coleurTitre) 
+  }
+  if (idee.statut === true) {
+    changerStyleCarte("#198754", "green", "Approuvé", "hidden", "visible", "text-red");
   }else{
-    const divCard = document.getElementById(idCardIdee)
-    divCard.style.border = "1px solid #ce0033"
-    btnRefuser.style.visibility = "hidden"
-    btnValider.style.visibility = "visible"
-
-    //Chage le message au niveau du h6
-    const h6 = document.querySelector("#" + idCardIdee + " h6")
-    h6.textContent = "Refusée"
-    h6.classList.remove("text-green")
-    h6.classList.add("text-red") 
+    changerStyleCarte("#ce0033", "red", "Refusée", "visible", "hidden", "text-green");
   }
 
+  function creerLesDeuxDiagrammeCirculaires() {
+    buildGoogleChart()
+    let pourcentageAccepte = (metrique.accepte*100)/metrique.total
+    let pourcentageRefuse = (metrique.refuse*100)/metrique.total
+    let cercle =  document.querySelector('.percentage')
+    cercle.style.background = `conic-gradient(#198754 ${pourcentageAccepte}%, #ce0033 0)`
+    document.querySelector('.pourcentage-accepte').innerHTML = `${pourcentageAccepte.toFixed(2)}%`
+    document.querySelector('.pourcentage-refuse').innerHTML = `${pourcentageRefuse.toFixed(2)}%`        
+  }
 
   //Ecouter l'évenement click sur les boutons
   btnValider.addEventListener("click", (event) => {
     //on prend l'id de l'idée
-    fetch(API_URL + "?id=eq." + idee.id, {
-      method: "PATCH",
-      headers: {
-        apikey: API_KEY,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify({ statut: true }),
-    })
-      .then((response) => response.json())
+      database.modifier(idee)
       .then((data) => {
         if (data[0].statut === true) {
-          //On récupere la carde concernée
-          const divCard = document.getElementById(idCardIdee)
-          divCard.style.border = "1px solid #198754"
-          btnValider.style.visibility = "hidden"
-          btnRefuser.style.visibility = "visible"
-
-          //Chage le message au niveau du h6
-          const h6 = document.querySelector("#" + idCardIdee + " h6")
-          h6.textContent = "Approuvée"
-          h6.classList.remove("text-red")
-          h6.classList.add("text-green")
+          changerStyleCarte("#198754", "green", "Approuvé", "hidden", "visible", "text-red");
           metrique.accepte++
           metrique.refuse--
-          buildGoogleChart()
-          let pourcentageAccepte = (metrique.accepte*100)/metrique.total
-          let pourcentageRefuse = (metrique.refuse*100)/metrique.total
-          let cercle =  document.querySelector('.percentage')
-          cercle.style.background = `conic-gradient(#198754 ${pourcentageAccepte}%, #ce0033 0)`
-          document.querySelector('.pourcentage-accepte').innerHTML = `${pourcentageAccepte.toFixed(2)}%`
-          document.querySelector('.pourcentage-refuse').innerHTML = `${pourcentageRefuse.toFixed(2)}%`        
+          creerLesDeuxDiagrammeCirculaires()
         }
       })
   })
 
   btnRefuser.addEventListener("click", (event) => {
     //on prend l'id de l'idée
-    fetch(API_URL + "?id=eq." + idee.id, {
-      method: "PATCH",
-      headers: {
-        apikey: API_KEY,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify({ statut: false }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
+    database.modifier(idee)
+      .then(data => {
         if (data[0].statut === false) {
           //On récupere la carde concernée
-          const divCard = document.getElementById(idCardIdee)
-          divCard.style.border = "1px solid #ce0033"
-          btnRefuser.style.visibility = "hidden"
-          btnValider.style.visibility = "visible"
-
-          //Chage le message au niveau du h6
-          const h6 = document.querySelector("#" + idCardIdee + " h6")
-          h6.textContent = "Refusée"
-          h6.classList.remove("text-green")
-          h6.classList.add("text-red")
+          changerStyleCarte("#ce0033", "red", "Refusée", "visible", "hidden", "text-green");
           metrique.accepte--
           metrique.refuse++
-          buildGoogleChart()
-          let pourcentageAccepte = (metrique.accepte*100)/metrique.total
-          let pourcentageRefuse = (metrique.refuse*100)/metrique.total
-          let cercle =  document.querySelector('.percentage')
-          cercle.style.background = `conic-gradient(#198754 ${pourcentageAccepte}%, #ce0033 0)`
-          document.querySelector('.pourcentage-accepte').innerHTML = `${pourcentageAccepte.toFixed(2)}%`
-          document.querySelector('.pourcentage-refuse').innerHTML = `${pourcentageRefuse.toFixed(2)}%`        
+          creerLesDeuxDiagrammeCirculaires()
         }
       })
   })
-
 
   if (idee.statut){
     metrique.accepte++
@@ -167,29 +106,16 @@ const creerUneCarte = (idee) => {
     metrique.refuse++
   }metrique.total++
 
-  let pourcentageAccepte = (metrique.accepte*100)/metrique.total
-  let pourcentageRefuse = (metrique.refuse*100)/metrique.total
-
-  let cercle =  document.querySelector('.percentage')
-  cercle.style.background = `conic-gradient(#198754 ${pourcentageAccepte}%, #ce0033 0)`
-  document.querySelector('.pourcentage-accepte').innerHTML = `${pourcentageAccepte.toFixed(2)}%`
-  document.querySelector('.pourcentage-refuse').innerHTML = `${pourcentageRefuse.toFixed(2)}%`
-
-  // mise à jour des data-set
-
-  let chartDiv = document.getElementById('chart_div')
-
-  chartDiv.setAttribute('data-accept', metrique.accepte)
-  chartDiv.setAttribute('data-refuse', metrique.refuse)
+  creerLesDeuxDiagrammeCirculaires()
 
 }
 
 // VERIFICATION DES MOTS SAISIS
 inputSuggestion.addEventListener("input", (event) => {
-  const longueurMax = 130
+  const LONGUEURMAX = 130
   const contenuSaisi = inputSuggestion.value
   const longueurSaisi = contenuSaisi.length
-  const reste = longueurMax - longueurSaisi
+  const reste = LONGUEURMAX - longueurSaisi
 
   //actualiser le dom pour afficher le nombre
   const paragraphCompteur = document.getElementById("limite-text")
@@ -216,8 +142,87 @@ inputSuggestion.addEventListener("input", (event) => {
 // RECUPERATION DES INFORMAIONS DU FORMULAIRE
 ideeForm.addEventListener("submit", (event) => {
   event.preventDefault()
-
+  
   // Récupération des informations saisies
+  let nouvelleIdee = recuperationSaisi();
+  
+  database.ajouter(nouvelleIdee).then(data => {
+    ideeCreeAuNiveauAPI = data[0]
+    creerUneCarte(ideeCreeAuNiveauAPI)
+  })
+  
+  // on vide les champs
+  inputTitre.value = ""
+  inputSuggestion.value = ""
+})
+
+
+window.addEventListener("DOMContentLoaded", (event) => {
+  //RECUPERATION DES DONNEES VIA API
+  database.recuperer().then( idees => {
+    idees.forEach((idee) => {
+      creerUneCarte(idee)
+    })
+  })
+})
+
+function filtrer (elementFiltre, etat) {
+  document.querySelector('.'+elementFiltre).addEventListener('click', ()=>{
+    let cartes = propositionElement.children
+    for (const carte of cartes) {
+      if(carte.getAttribute('data-state') == etat){
+        carte.classList.add('d-none')
+      }else{
+        carte.classList.remove('d-none')
+      }
+    }
+  })
+}
+
+filtrer('filtre-refuse', 'true')
+filtrer('filtre-accepte', 'false')
+
+document.querySelector('.filtre-tous').addEventListener('click', ()=>{
+  let cartes = propositionElement.children
+  for (const carte of cartes) {
+    carte.classList.remove('d-none')
+  }
+})
+
+function buildGoogleChart() {
+  google.charts.load('current', {'packages':['corechart','bar']});
+  google.charts.setOnLoadCallback(drawChart);
+  
+  function drawChart() {
+    // Create the data table.
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Topping');
+    data.addColumn('number', 'Slices');
+    
+    data.addRows([
+      ['accepté', metrique.accepte],
+      ['refusé', metrique.refuse]
+    ]);
+    
+    // Set chart options
+    var options = {'title':'Stats des idées',
+    'colors':['#ce0033', '#198754'],
+    'width':400,
+    'height':250,
+    pieHole: 0.5,
+    pieSliceTextStyle: {
+      color: 'white',
+    },
+  };
+  
+  // Instantiate and draw our chart, passing in some options.
+  var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+  chart.draw(data, options);
+}
+}
+
+function recuperationSaisi(){
+
   const titreSaisi = inputTitre.value
   const suggestionSaisi = inputSuggestion.value
 
@@ -234,107 +239,5 @@ ideeForm.addEventListener("submit", (event) => {
     suggestion: suggestionSaisi,
     statut: false,
   }
-
-  //ENVOYER LES DONNEES VERS SUPABASE
-  fetch(API_URL, {
-    method: "POST",
-    headers: {
-      apikey: API_KEY,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
-    body: JSON.stringify(nouvelleIdee),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      ideeCreeAuNiveauAPI = data[0]
-      //AJOUT DE LA NOUVELLE IDEE AU NIVEAU DE LA PAGE
-      creerUneCarte(ideeCreeAuNiveauAPI)
-    })
-
-  // on vide les champs
-  inputTitre.value = ""
-  inputSuggestion.value = ""
-})
-
-function rendreLesCartes() {
-  fetch(API_URL, {
-    headers: {
-      apikey: API_KEY,
-    },
-  })
-    .then((response) => response.json())
-    .then((idees) => {
-      idees.forEach((idee) => creerUneCarte(idee))
-
-      buildGoogleChart()
-    })
-}
-rendreLesCartes();
-
-
-document.querySelector('.filtre-refuse').addEventListener('click', ()=>{
-  let cartes = propositionElement.children
-  for (const carte of cartes) {
-    if(carte.getAttribute('data-state') == "true"){
-      carte.classList.add('d-none')
-    }else{
-      carte.classList.remove('d-none')
-    }
-  }
-})
-document.querySelector('.filtre-accepte').addEventListener('click', ()=>{
-  let cartes = propositionElement.children
-  for (const carte of cartes) {
-    if(carte.getAttribute('data-state') == "false"){
-      carte.classList.add('d-none')
-    }else{
-      carte.classList.remove('d-none')
-    }
-  }
-})
-
-document.querySelector('.filtre-tous').addEventListener('click', ()=>{
-  let cartes = propositionElement.children
-  for (const carte of cartes) {
-    carte.classList.remove('d-none')
-  }
-})
-
-
-
-function buildGoogleChart() {
-  google.charts.load('current', {'packages':['corechart','bar']});
-  google.charts.setOnLoadCallback(drawChart);
-  
-  function drawChart() {
-          // let accept = document.getElementById('chart_div').dataset.accept
-          // let refuse = document.getElementById('chart_div').dataset.refuse
-          
-          // Create the data table.
-          var data = new google.visualization.DataTable();
-          data.addColumn('string', 'Topping');
-          data.addColumn('number', 'Slices');
-          // console.log(accept)
-          
-          data.addRows([
-              ['accepté', metrique.accepte],
-              ['refusé', metrique.refuse]
-          ]);
-          
-          // Set chart options
-          var options = {'title':'Stats des idées',
-          'colors':['#ce0033', '#198754'],
-          'width':400,
-          'height':250,
-          pieHole: 0.5,
-          pieSliceTextStyle: {
-              color: 'white',
-          },
-      };
-      
-      // Instantiate and draw our chart, passing in some options.
-      var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
-      chart.draw(data, options);
-  }
+  return nouvelleIdee
 }
